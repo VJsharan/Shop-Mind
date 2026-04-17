@@ -1,0 +1,1 @@
+# ShopMind tests package

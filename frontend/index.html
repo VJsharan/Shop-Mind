@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopMind - AI-Powered Shopping Assistant</title>
+    <meta name="description" content="Shop smarter with AI. Natural language shopping assistant that understands your needs.">
+    <style>
+        :root {
+            /* WCAG AAA compliant contrast colors */
+            --bg-color: #1a1a2e;
+            --text-color: #e0e0e0;
+            --accent-color: #4f8ef7;
+            --accent-hover: #3a75d1;
+            --card-bg: #252542;
+            --border-color: #3b3b63;
+            --chip-bg: #35355e;
+            --error-color: #ff6b6b;
+            --star-color: #ffd700;
+            --focus-ring: 0 0 0 3px rgba(79, 142, 247, 0.6);
+            --transition-speed: 0.2s;
+            --font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Focus styles for accessibility */
+        *:focus-visible {
+            outline: none;
+            box-shadow: var(--focus-ring);
+            border-radius: 4px;
+        }
+
+        /* Navigation */
+        nav {
+            background-color: var(--card-bg);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin: 0;
+        }
+
+        .tagline {
+            font-size: 0.9rem;
+            color: #a0a0c0;
+            margin: 0.2rem 0 0 0;
+        }
+
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Search Section */
+        .search-section {
+            max-width: 800px;
+            margin: 0 auto 3rem auto;
+            text-align: center;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            font-size: 1.1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 30px;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            transition: border-color var(--transition-speed);
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: var(--focus-ring);
+        }
+
+        .search-button {
+            padding: 0 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background-color var(--transition-speed), transform 0.1s;
+        }
+
+        .search-button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .search-button:active {
+            transform: scale(0.98);
+        }
+
+        /* Empty State / Examples */
+        .empty-state {
+            margin-top: 2rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .example-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .example-chip {
+            background-color: var(--chip-bg);
+            border: 1px solid var(--border-color);
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all var(--transition-speed);
+        }
+
+        .example-chip:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        /* Loading Spinner */
+        .loader-container {
+            display: none;
+            justify-content: center;
+            padding: 3rem;
+        }
+
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Results Grid */
+        .results-container {
+            display: none;
+        }
+
+        .summary-text {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: #b0b0d0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* Product Card */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .brand {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+
+        .price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .product-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0 0 1rem 0;
+            line-height: 1.4;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            background-color: var(--chip-bg);
+        }
+
+        .color-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .color-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 1px solid #fff;
+        }
+
+        .rating {
+            color: var(--star-color);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .relevance-bar-container {
+            width: 100%;
+            height: 6px;
+            background-color: var(--border-color);
+            border-radius: 3px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .relevance-bar {
+            height: 100%;
+            background-color: var(--accent-color);
+        }
+
+        .explanation {
+            font-size: 0.9rem;
+            font-style: italic;
+            color: #a0a0c0;
+            flex-grow: 1;
+            margin-bottom: 1.5rem;
+            padding-left: 1rem;
+            border-left: 3px solid var(--accent-color);
+        }
+
+        .add-btn {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: transparent;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+        }
+
+        .add-btn:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        /* Error state */
+        .error-message {
+            display: none;
+            background-color: rgba(255, 107, 107, 0.1);
+            border: 1px solid var(--error-color);
+            color: var(--error-color);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        /* Status Bar (Intent) */
+        .status-bar {
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            position: sticky;
+            bottom: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            z-index: 10;
+        }
+
+        .status-label {
+            font-size: 0.85rem;
+            color: #8080a0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .intent-chip {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            .search-form {
+                flex-direction: column;
+            }
+            .search-button {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav aria-label="Main Navigation">
+        <h1 class="logo">ShopMind</h1>
+        <p class="tagline">Shop smarter with AI</p>
+    </nav>
+
+    <main>
+        <section class="search-section" aria-label="Search Section">
+            <form id="searchForm" class="search-form">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    class="search-input" 
+                    placeholder="e.g., blue formal shirt under ₹1500 for an interview" 
+                    aria-label="Search query"
+                    autocomplete="off"
+                    required
+                >
+                <button type="submit" class="search-button" aria-label="Search">Search</button>
+            </form>
+
+            <div id="emptyState" class="empty-state">
+                <p>Not sure where to start? Try one of these:</p>
+                <div class="example-chips" role="list">
+                    <button class="example-chip" role="listitem" onclick="setQuery(this.textContent)">blue formal shirt under ₹1500 for an interview</button>
+                    <button class="example-chip" role="listitem" onclick="setQuery(this.textContent)">casual sneakers for gym</button>
+                    <button class="example-chip" role="listitem" onclick="setQuery(this.textContent)">elegant red dress for a party</button>
+                </div>
+            </div>
+        </section>
+
+        <div id="errorMessage" class="error-message" role="alert" aria-live="assertive"></div>
+
+        <div id="loader" class="loader-container" aria-hidden="true">
+            <div class="loader"></div>
+        </div>
+
+        <section id="resultsContainer" class="results-container" aria-live="polite" aria-label="Search Results">
+            <h2 id="summaryText" class="summary-text"></h2>
+            <div id="productGrid" class="grid">
+                <!-- Products rendered here via JS -->
+            </div>
+        </section>
+    </main>
+
+    <footer id="statusBar" class="status-bar" aria-label="Parsed Search Intent">
+        <span class="status-label">AI understood:</span>
+        <div id="intentContainer" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <!-- Intent chips rendered here via JS -->
+        </div>
+    </footer>
+
+    <script>
+        // State
+        let sessionId = '';
+        let debounceTimer;
+
+        // DOM Elements
+        const form = document.getElementById('searchForm');
+        const input = document.getElementById('searchInput');
+        const emptyState = document.getElementById('emptyState');
+        const loader = document.getElementById('loader');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const productGrid = document.getElementById('productGrid');
+        const summaryText = document.getElementById('summaryText');
+        const errorMessage = document.getElementById('errorMessage');
+        const statusBar = document.getElementById('statusBar');
+        const intentContainer = document.getElementById('intentContainer');
+
+        // Initialize
+        function init() {
+            sessionId = crypto.randomUUID();
+            input.focus();
+        }
+
+        function setQuery(text) {
+            input.value = text;
+            input.focus();
+            form.dispatchEvent(new Event('submit'));
+        }
+
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            errorMessage.style.display = 'block';
+            loader.style.display = 'none';
+            resultsContainer.style.display = 'none';
+            statusBar.style.display = 'none';
+            emptyState.style.display = 'block';
+        }
+
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+
+        // Render functions
+        function renderIntent(intent) {
+            intentContainer.innerHTML = '';
+            
+            const createChip = (val, prefix = '') => {
+                if (!val) return;
+                const chip = document.createElement('span');
+                chip.className = 'intent-chip';
+                chip.textContent = prefix + val;
+                intentContainer.appendChild(chip);
+            };
+
+            createChip(intent.category);
+            createChip(intent.color);
+            createChip(intent.occasion);
+            if (intent.max_price) createChip(intent.max_price, 'Under ₹');
+            
+            if (intentContainer.children.length === 0) {
+                createChip('Broad search');
+            }
+            
+            statusBar.style.display = 'flex';
+        }
+
+        function renderStars(rating) {
+            const fullStars = Math.floor(rating);
+            const hasHalf = rating % 1 >= 0.5;
+            let stars = '';
+            for (let i = 0; i < 5; i++) {
+                if (i < fullStars) stars += '★';
+                else if (i === fullStars && hasHalf) stars += '⯪';
+                else stars += '☆';
+            }
+            return `${stars} (${rating})`;
+        }
+
+        function renderProduct(result) {
+            const p = result.product;
+            const scorePercent = Math.round(result.relevance_score * 100);
+            
+            const occasionTags = p.occasion.map(occ => `<span class="tag">${occ}</span>`).join('');
+            
+            const article = document.createElement('article');
+            article.className = 'card';
+            article.setAttribute('tabindex', '0');
+            article.setAttribute('aria-label', `${p.name} by ${p.brand}, Price ₹${p.price}`);
+            
+            // Map common color names to CSS colors for the dot
+            const colorMap = {
+                'black': '#000000', 'white': '#ffffff', 'blue': '#2196F3', 
+                'navy': '#000080', 'red': '#F44336', 'green': '#4CAF50',
+                'brown': '#795548', 'grey': '#9E9E9E', 'beige': '#F5F5DC',
+                'pink': '#E91E63', 'silver': '#C0C0C0', 'gold': '#FFD700'
+            };
+            const dotColor = colorMap[p.color.toLowerCase()] || 'transparent';
+
+            article.innerHTML = `
+                <div class="card-header">
+                    <span class="brand">${p.brand}</span>
+                    <span class="price">₹${p.price}</span>
+                </div>
+                <h3 class="product-name">${p.name}</h3>
+                
+                <div class="tags">
+                    <span class="tag color-badge">
+                        <span class="color-dot" style="background-color: ${dotColor};"></span>
+                        ${p.color}
+                    </span>
+                    ${occasionTags}
+                </div>
+                
+                <div class="rating" aria-label="Rating: ${p.rating} out of 5">
+                    ${renderStars(p.rating)}
+                </div>
+                
+                <div class="relevance-bar-container" aria-label="Relevance score: ${scorePercent}%">
+                    <div class="relevance-bar" style="width: ${scorePercent}%"></div>
+                </div>
+                
+                <p class="explanation">${result.explanation}</p>
+                
+                <button class="add-btn" aria-label="Add ${p.name} to cart" onclick="alert('Added to cart UI demo!')">
+                    Add to Cart
+                </button>
+            `;
+            
+            return article;
+        }
+
+        // Form Submit
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const query = input.value.trim();
+            if (!query) return;
+
+            // Debounce
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => performSearch(query), 300);
+        });
+
+        async function performSearch(query) {
+            hideError();
+            emptyState.style.display = 'none';
+            resultsContainer.style.display = 'none';
+            statusBar.style.display = 'none';
+            loader.style.display = 'flex';
+            productGrid.innerHTML = '';
+            summaryText.textContent = '';
+
+            try {
+                // Determine API URL based on environment
+                // Use relative path since backend serves frontend on same port
+                const apiUrl = '/api/chat';
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        session_id: sessionId
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                loader.style.display = 'none';
+                
+                if (data.results && data.results.length > 0) {
+                    summaryText.textContent = data.summary;
+                    data.results.forEach(res => {
+                        productGrid.appendChild(renderProduct(res));
+                    });
+                    renderIntent(data.parsed_intent);
+                    resultsContainer.style.display = 'block';
+                } else {
+                    showError("No products found for this search. Try broadening your criteria.");
+                }
+
+            } catch (err) {
+                console.error("Search error:", err);
+                showError("Sorry, we couldn't process your request right now. Please try again.");
+            }
+        }
+
+        // Run init
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
