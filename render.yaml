@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: shopmind-api
+    env: docker
+    dockerfilePath: ./Dockerfile
+    region: singapore
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: GCP_PROJECT_ID
+        sync: false
+      - key: VERTEX_LOCATION
+        value: asia-south1
+      - key: FIRESTORE_DATABASE
+        value: newdb
+      - key: GOOGLE_APPLICATION_CREDENTIALS_JSON
+        sync: false

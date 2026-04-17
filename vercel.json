@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "buildCommand": "cd frontend-react && npm install && npm run build",
+  "outputDirectory": "frontend-react/dist",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://your-backend-url.onrender.com/api/$1" },
+    { "source": "/health", "destination": "https://your-backend-url.onrender.com/health" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
